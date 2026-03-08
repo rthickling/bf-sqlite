@@ -21,3 +21,5 @@ tests/test_hex_decode
 tests/test_hex_one
 tests/test_magic
 tests/fixtures/tiny.db
+__pycache__/
+*.pyc
