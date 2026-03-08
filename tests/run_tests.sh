@@ -45,6 +45,42 @@ build_generated_phase() {
   fi
 }
 
+print_stderr_excerpt() {
+  local stderr_file="$1"
+  if [ -s "$stderr_file" ]; then
+    echo "Stderr:"
+    sed -n '1,10p' "$stderr_file"
+  fi
+}
+
+run_write_program_capture() {
+  local test_name="$1"
+  local exe="$2"
+  local output_file="$3"
+  local stderr_file="$4"
+  local timeout_secs="${5:-120}"
+  local run_rc=0
+
+  set +e
+  timeout "$timeout_secs" "$exe" < /dev/null > "$output_file" 2> "$stderr_file"
+  run_rc=$?
+  set -e
+
+  if [ "$run_rc" -eq 124 ]; then
+    echo "FAIL: $test_name timed out after ${timeout_secs}s"
+    print_stderr_excerpt "$stderr_file"
+    return 1
+  fi
+
+  if [ "$run_rc" -ne 0 ]; then
+    echo "FAIL: $test_name exited with status $run_rc"
+    print_stderr_excerpt "$stderr_file"
+    return 1
+  fi
+
+  return 0
+}
+
 run_shell_test() {
   local name="$1"
   local db="${2:-$FIXTURES/tiny.db}"
@@ -120,14 +156,42 @@ run_table_scan_test() {
   # Unbuffer stdout so piped output is captured.
   echo "(table_scan timeout ${TABLE_SCAN_TIMEOUT}s)"
   CAPTURE_STDERR="/tmp/sqlite_table_scan_stderr.$$"
+  local run_rc=0
+  local awk_rc=0
+  local pipe_status=()
+  set +e
   if command -v stdbuf >/dev/null 2>&1; then
-    timeout "$TABLE_SCAN_TIMEOUT" stdbuf -o0 "$exe" <"$RES" 2>"$CAPTURE_STDERR" | awk -v cap="$CAPTURE" -v req="$REQ" '{ print >> cap; fflush(cap); if ($0 == "H" || $0 ~ /^R /) { print >> req; fflush(req); } }' || true
+    timeout "$TABLE_SCAN_TIMEOUT" stdbuf -o0 "$exe" <"$RES" 2>"$CAPTURE_STDERR" | awk -v cap="$CAPTURE" -v req="$REQ" '{ print >> cap; fflush(cap); if ($0 == "H" || $0 ~ /^R /) { print >> req; fflush(req); } }'
+    pipe_status=("${PIPESTATUS[@]}")
+    run_rc=${pipe_status[0]:-0}
+    awk_rc=${pipe_status[1]:-0}
   else
-    timeout "$TABLE_SCAN_TIMEOUT" "$exe" <"$RES" 2>"$CAPTURE_STDERR" | awk -v cap="$CAPTURE" -v req="$REQ" '{ print >> cap; fflush(cap); if ($0 == "H" || $0 ~ /^R /) { print >> req; fflush(req); } }' || true
+    timeout "$TABLE_SCAN_TIMEOUT" "$exe" <"$RES" 2>"$CAPTURE_STDERR" | awk -v cap="$CAPTURE" -v req="$REQ" '{ print >> cap; fflush(cap); if ($0 == "H" || $0 ~ /^R /) { print >> req; fflush(req); } }'
+    pipe_status=("${PIPESTATUS[@]}")
+    run_rc=${pipe_status[0]:-0}
+    awk_rc=${pipe_status[1]:-0}
   fi
+  set -e
   exec 3>&-
   kill $PAGER_PID 2>/dev/null || true
   rm -f "$REQ" "$RES"
+  if [ "$run_rc" -eq 124 ]; then
+    echo "FAIL: sqlite_table_scan timed out after ${TABLE_SCAN_TIMEOUT}s"
+    print_stderr_excerpt "$CAPTURE_STDERR"
+    rm -f "$CAPTURE" "$CAPTURE_STDERR"
+    exit 1
+  fi
+  if [ "$run_rc" -ne 0 ]; then
+    echo "FAIL: sqlite_table_scan exited with status $run_rc"
+    print_stderr_excerpt "$CAPTURE_STDERR"
+    rm -f "$CAPTURE" "$CAPTURE_STDERR"
+    exit 1
+  fi
+  if [ "$awk_rc" -ne 0 ]; then
+    echo "FAIL: sqlite_table_scan capture pipeline exited with status $awk_rc"
+    rm -f "$CAPTURE" "$CAPTURE_STDERR"
+    exit 1
+  fi
   # Expected rows: use sqlite3 (data-driven) when available, else expected file
   local expected_rows=""
   if command -v sqlite3 >/dev/null 2>&1; then
@@ -264,15 +328,21 @@ run_update_test() {
   exec 3<>"$RES"
   echo "Running update..."
   local update_out="/tmp/sqlite_update_out_$$"
-  timeout 120 "$exe" < /dev/null 2>/dev/null > "$update_out"
+  local update_err="/tmp/sqlite_update_err_$$"
+  if ! run_write_program_capture "sqlite_update" "$exe" "$update_out" "$update_err" 120; then
+    rm -f "$update_out" "$update_err" "$RES" "$db_copy"
+    exec 3>&-
+    exit 1
+  fi
   if [ ! -s "$update_out" ] || [ "$(wc -c < "$update_out")" -lt 8000 ]; then
     echo "FAIL: sqlite_update produced no or insufficient output"
-    rm -f "$update_out" "$RES" "$db_copy"
+    print_stderr_excerpt "$update_err"
+    rm -f "$update_out" "$update_err" "$RES" "$db_copy"
     exec 3>&-
     exit 1
   fi
   REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$update_out"
-  rm -f "$update_out"
+  rm -f "$update_out" "$update_err"
   exec 3>&-
   rm -f "$RES"
   local expected="$SCRIPT_DIR/expected_table_scan_after_update.txt"
@@ -328,9 +398,21 @@ run_delete_test() {
   exec 3<>"$RES"
   echo "Running delete..."
   local delete_out="/tmp/sqlite_delete_out_$$"
-  timeout 120 "$exe" < /dev/null 2>/dev/null > "$delete_out"
-  [ -s "$delete_out" ] && REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$delete_out"
-  rm -f "$delete_out"
+  local delete_err="/tmp/sqlite_delete_err_$$"
+  if ! run_write_program_capture "sqlite_delete" "$exe" "$delete_out" "$delete_err" 120; then
+    rm -f "$delete_out" "$delete_err" "$RES" "$db_copy"
+    exec 3>&-
+    exit 1
+  fi
+  if [ ! -s "$delete_out" ] || [ "$(wc -c < "$delete_out")" -lt 8000 ]; then
+    echo "FAIL: sqlite_delete produced no or insufficient output"
+    print_stderr_excerpt "$delete_err"
+    rm -f "$delete_out" "$delete_err" "$RES" "$db_copy"
+    exec 3>&-
+    exit 1
+  fi
+  REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$delete_out"
+  rm -f "$delete_out" "$delete_err"
   exec 3>&-
   rm -f "$RES"
   local expected="$SCRIPT_DIR/expected_table_scan_after_delete.txt"
@@ -386,9 +468,21 @@ run_insert_test() {
   exec 3<>"$RES"
   echo "Running insert..."
   local insert_out="/tmp/sqlite_insert_out_$$"
-  timeout 120 "$exe" < /dev/null 2>/dev/null > "$insert_out"
-  [ -s "$insert_out" ] && REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$insert_out"
-  rm -f "$insert_out"
+  local insert_err="/tmp/sqlite_insert_err_$$"
+  if ! run_write_program_capture "sqlite_insert" "$exe" "$insert_out" "$insert_err" 120; then
+    rm -f "$insert_out" "$insert_err" "$RES" "$db_copy"
+    exec 3>&-
+    exit 1
+  fi
+  if [ ! -s "$insert_out" ] || [ "$(wc -c < "$insert_out")" -lt 8000 ]; then
+    echo "FAIL: sqlite_insert produced no or insufficient output"
+    print_stderr_excerpt "$insert_err"
+    rm -f "$insert_out" "$insert_err" "$RES" "$db_copy"
+    exec 3>&-
+    exit 1
+  fi
+  REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$insert_out"
+  rm -f "$insert_out" "$insert_err"
   exec 3>&-
   rm -f "$RES"
   local expected="$SCRIPT_DIR/expected_table_scan_after_insert.txt"
