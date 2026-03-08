@@ -312,8 +312,8 @@ bf-sqlite/
   LICENSE                 # MIT or similar
   README.md
   docs/
-    architecture.md       # (copy/symlink from brainfuck_sqlite_architecture.md)
-    build_plan.md         # (copy/symlink from brainfuck_sqlite_build_plan.md)
+    architecture.md       # archived architecture note
+    build_plan.md         # archived build-plan note
     DETAILED_BUILD_PLAN.md
     sqlite_subset.md      # SQLite format notes
   scripts/

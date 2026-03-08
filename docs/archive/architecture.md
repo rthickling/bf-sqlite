@@ -1,3 +1,3 @@
 # Brainfuck-Based SQLite File Access
 
-See `brainfuck_sqlite_architecture.md` in the project root for the original long-form architecture note.
+The original long-form architecture note was removed from the public repo to keep the user-facing documentation focused.

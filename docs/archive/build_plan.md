@@ -1,3 +1,3 @@
 # Cursor Build Plan
 
-See `brainfuck_sqlite_build_plan.md` in the project root for the original long-form build plan.
+The original long-form build-plan note was removed from the public repo to keep the user-facing documentation focused.

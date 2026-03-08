@@ -2,6 +2,19 @@
 
 **SQLite file-format access in BrainFuck.** The shell side only moves bytes. The BrainFuck side does the interesting work: header parsing, page reads, schema walking, table scans, and small controlled writes.
 
+## Why I Built This
+
+This project is an intentionally absurd demonstration.
+
+The point is not that BrainFuck is a sensible language for database work. The point is that a piece of software which would normally feel intractable can now be assembled surprisingly quickly with AI assistance.
+
+In roughly a day of part-time work, this repo went from idea to a working demo that can:
+
+- read the SQLite header
+- walk schema pages
+- scan a table
+- perform small controlled writes
+
 ## What works now
 
 - Header read and validation

@@ -14,5 +14,3 @@ Everything else here is background material rather than required reading.
 Notable archived notes that still live elsewhere in the repo:
 
 - `docs/DETAILED_BUILD_PLAN.md`
-- `brainfuck_sqlite_build_plan.md`
-- `brainfuck_sqlite_architecture.md`
