@@ -1,6 +1,8 @@
 # BF-SQLite
 
-**SQLite file-format access in BrainFuck.** The shell side only moves bytes. The BrainFuck side does the interesting work: header parsing, page reads, schema walking, table scans, limited column projection, and small controlled writes.
+**SQLite file-format access in BrainFuck** : an experiment in interacting with SQLite databases from Brainfuck using only standard Linux primitives.
+
+The shell side only moves bytes. The BrainFuck side does the interesting work: header parsing, page reads, schema walking, table scans, limited column projection, and small controlled writes.
 
 ## Why I Built This
 
@@ -13,6 +15,7 @@ In roughly a day of part-time work, this repo went from idea to a working demo t
 - read the SQLite header
 - walk schema pages
 - scan a table
+- project selected columns from the demo table
 - perform small controlled writes
 
 ## What works now
@@ -87,7 +90,7 @@ The protocol is intentionally small:
 
 ## Main entry points
 
-- `scripts/run_bf_db.sh` runs any `.bf` file or built phase executable against a database
+- `scripts/run_bf_db.sh` runs any `.bf` file or built demo executable against a database
 - `examples/01_hello_header.bf` is the minimal runnable demo
 - `sqlite_select_users_name_sex` is the simplest `SELECT name,sex FROM users;` equivalent
 - `tests/run_tests.sh` is the proof runner behind `run-tests`
