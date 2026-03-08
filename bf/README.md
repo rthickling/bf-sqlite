@@ -12,6 +12,7 @@ This directory holds the BF-side implementation.
 - `sqlite_insert.bf` - controlled insert demo
 - `sqlite_update.bf` - controlled update demo
 - `sqlite_delete.bf` - controlled delete demo
+- `sqlite_create_log_table.bf` - narrow create-table demo for `log(ts INT, value TEXT)`
 - `sqlite_select_users_name.bf` - project one column from the demo `users` table
 - `sqlite_select_users_name_sex.bf` - project two columns from the demo `users` table
 

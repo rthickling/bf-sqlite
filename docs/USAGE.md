@@ -12,8 +12,9 @@ build-image
 run-bf-db my_program.bf tests/fixtures/tiny.db
 ```
 
-For the built demo phases and tests, the repo now reuses existing executables and
-only rebuilds a phase when its generator, generated `.bf`, or fixture DB changed.
+For the built demo programs and tests, the repo now reuses existing executables
+and only rebuilds a program when its generator, generated `.bf`, or fixture DB
+changed.
 
 Local toolchain:
 
@@ -33,7 +34,8 @@ Your BrainFuck program:
 - writes commands to `stdout`
 - reads pager responses from `stdin`
 
-The pager itself is `scripts/pager.sh`. In normal use you do not run it directly; `scripts/run_bf_db.sh` wires everything together with FIFOs.
+The pager itself is `scripts/pager.sh`. In normal use you do not run it directly;
+`scripts/run_bf_db.sh` and `scripts/run_bf_db.py` wire everything together.
 
 ## Protocol
 
@@ -101,6 +103,36 @@ Current limits:
 This is intentionally a BF-native query helper, not a full SQL parser or SQL
 engine.
 
+## Narrow CREATE TABLE demo
+
+The repo also includes one narrow create-table demo. It is the equivalent of:
+
+```sql
+CREATE TABLE log (ts INT, value TEXT);
+```
+
+using the built program:
+
+```bash
+export PATH="$PWD/bin:$PATH"
+run-bf-db ./sqlite_create_log_table tests/fixtures/tiny.db
+```
+
+For custom table names and simple column lists, generate a BF program with:
+
+```bash
+python3 scripts/gen_create_table_bf.py log ts:INT value:TEXT > bf/my_create_log_table.bf
+run-bf-db bf/my_create_log_table.bf tests/fixtures/tiny.db
+```
+
+Current limits:
+
+- fixed 4096-byte page-size demo path only
+- simple table name plus `name:INT` / `name:TEXT` column specs only
+- empty table creation only
+- no indexes, constraints, `WITHOUT ROWID`, page splits, journaling, or general SQL parsing
+- page 1 / `sqlite_schema` must have enough free space for the new schema row
+
 ## Helpful building blocks
 
 - `bf/lib_hex_decode.bf` for hex-pair to byte decoding
@@ -125,6 +157,7 @@ The built binaries are the easiest way to see the current capability:
 - `sqlite_insert`
 - `sqlite_update`
 - `sqlite_delete`
+- `sqlite_create_log_table`
 - `sqlite_select_users_name`
 - `sqlite_select_users_name_sex`
 

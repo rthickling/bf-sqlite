@@ -298,6 +298,101 @@ run_select_invalid_spec_test() {
   fi
 }
 
+run_create_invalid_spec_test() {
+  local test_name="$1"
+  local expected_message="$2"
+  shift 2
+  echo "=== $test_name ==="
+  local output=""
+
+  if output=$(python3 "$PROJECT_DIR/scripts/gen_create_table_bf.py" "$@" 2>&1 >/dev/null); then
+    echo "FAIL: expected generator failure for $test_name"
+    exit 1
+  fi
+
+  if printf '%s' "$output" | grep -Fq "$expected_message"; then
+    echo "OK: $test_name failed clearly"
+  else
+    echo "FAIL: unexpected error output for $test_name"
+    printf '%s\n' "$output"
+    exit 1
+  fi
+}
+
+run_create_table_test() {
+  echo "=== sqlite_create_log_table ==="
+  local exe="$PROJECT_DIR/sqlite_create_log_table"
+  build_generated_phase \
+    sqlite_create_log_table \
+    "$PROJECT_DIR/scripts/gen_create_table_bf.py" \
+    "$PROJECT_DIR/bf/sqlite_create_log_table.bf" \
+    "$exe" \
+    "${GCC:-clang -O0}" \
+    "$FIXTURES/tiny.db" \
+    log ts:INT value:TEXT
+  if [ ! -x "$exe" ]; then
+    echo "SKIP: sqlite_create_log_table not built (need bf2c + gen_create_table_bf)"
+    return 0
+  fi
+  if [ ! -f "$FIXTURES/tiny.db" ] || [ ! -s "$FIXTURES/tiny.db" ]; then
+    echo "SKIP: tiny.db missing"
+    return 0
+  fi
+
+  local db_copy="/tmp/tiny_create_table_$$.db"
+  cp "$FIXTURES/tiny.db" "$db_copy"
+  RES="/tmp/pager.res.$$"
+  rm -f "$RES"
+  mkfifo "$RES"
+  exec 3<>"$RES"
+  echo "Running create_table..."
+  local create_out="/tmp/sqlite_create_table_out_$$"
+  local create_err="/tmp/sqlite_create_table_err_$$"
+  if ! run_write_program_capture "sqlite_create_log_table" "$exe" "$create_out" "$create_err" 120; then
+    rm -f "$create_out" "$create_err" "$RES" "$db_copy"
+    exec 3>&-
+    exit 1
+  fi
+  if [ ! -s "$create_out" ] || [ "$(wc -c < "$create_out")" -lt 16000 ]; then
+    echo "FAIL: sqlite_create_log_table produced no or insufficient output"
+    print_stderr_excerpt "$create_err"
+    rm -f "$create_out" "$create_err" "$RES" "$db_copy"
+    exec 3>&-
+    exit 1
+  fi
+  REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$create_out"
+  rm -f "$create_out" "$create_err"
+  exec 3>&-
+  rm -f "$RES"
+
+  local integrity=""
+  local schema_row=""
+  local row_count=""
+  if command -v sqlite3 >/dev/null 2>&1; then
+    integrity=$(sqlite3 "$db_copy" "PRAGMA integrity_check;")
+    schema_row=$(sqlite3 "$db_copy" "SELECT type||'|'||name||'|'||tbl_name||'|'||rootpage||'|'||sql FROM sqlite_schema WHERE name='log';")
+    row_count=$(sqlite3 "$db_copy" "SELECT COUNT(*) FROM log;")
+  fi
+  rm -f "$db_copy"
+
+  if [ "$integrity" != "ok" ]; then
+    echo "FAIL: create_table produced invalid SQLite file"
+    echo "Integrity check: $integrity"
+    exit 1
+  fi
+  if [ "$schema_row" != "table|log|log|3|CREATE TABLE log (ts INT, value TEXT)" ]; then
+    echo "FAIL: create_table schema row mismatch"
+    echo "Got: $schema_row"
+    exit 1
+  fi
+  if [ "$row_count" != "0" ]; then
+    echo "FAIL: create_table expected empty log table"
+    echo "Got row count: $row_count"
+    exit 1
+  fi
+  echo "OK: create table and verify"
+}
+
 run_update_test() {
   echo "=== sqlite_update ==="
   local exe="$PROJECT_DIR/sqlite_update"
@@ -550,6 +645,8 @@ run_all_tests() {
     run_shell_test pager_header
     run_shell_test pager_page
     run_table_scan_test
+    run_create_table_test
+    run_create_invalid_spec_test create_invalid_affinity "Unsupported affinity" log value:BLOB
     run_select_projection_test \
       sqlite_select_users_name \
       "users name" \
@@ -580,6 +677,8 @@ if [ $# -gt 0 ]; then
     case "$t" in
       pager_header|pager_page) run_shell_test "$t" ;;
       table_scan) run_table_scan_test ;;
+      create_table) run_create_table_test ;;
+      create_invalid_affinity) run_create_invalid_spec_test "$t" "Unsupported affinity" log value:BLOB ;;
       select_name)
         run_select_projection_test \
           sqlite_select_users_name \
@@ -600,7 +699,7 @@ if [ $# -gt 0 ]; then
       update) run_update_test ;;
       delete) run_delete_test ;;
       *)
-        echo "Unknown test: $t (use: pager_header, pager_page, table_scan, select_name, select_name_sex, select_invalid_column, select_invalid_table, insert, update, delete, or test_*.bf)"
+        echo "Unknown test: $t (use: pager_header, pager_page, table_scan, create_table, create_invalid_affinity, select_name, select_name_sex, select_invalid_column, select_invalid_table, insert, update, delete, or test_*.bf)"
         exit 1
         ;;
     esac

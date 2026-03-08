@@ -26,6 +26,7 @@ bf/sqlite_table_scan.bf
 bf/sqlite_insert.bf
 bf/sqlite_update.bf
 bf/sqlite_delete.bf
+bf/sqlite_create_log_table.bf
 bf/sqlite_select_users_name.bf
 bf/sqlite_select_users_name_sex.bf
 

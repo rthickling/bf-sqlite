@@ -57,8 +57,11 @@ def forward_pager_output(program: subprocess.Popen[str], pager: subprocess.Popen
 
     try:
         for raw_line in pager.stdout:
-            program.stdin.write(raw_line)
-            program.stdin.flush()
+            try:
+                program.stdin.write(raw_line)
+                program.stdin.flush()
+            except BrokenPipeError:
+                break
     finally:
         try:
             program.stdin.close()
@@ -104,13 +107,16 @@ def main() -> int:
     program_rc = program.wait()
     t_out.join(timeout=1)
 
-    if pager.poll() is None:
-        try:
-            pager.terminate()
-            pager.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            pager.kill()
-            pager.wait(timeout=2)
+    try:
+        pager.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        if pager.poll() is None:
+            try:
+                pager.terminate()
+                pager.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                pager.kill()
+                pager.wait(timeout=2)
 
     t_in.join(timeout=1)
     return program_rc

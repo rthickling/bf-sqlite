@@ -24,6 +24,7 @@ Useful commands:
 
 ```bash
 run-bf-db ./sqlite_table_scan tests/fixtures/tiny.db
+run-bf-db ./sqlite_create_log_table tests/fixtures/tiny.db
 run-bf-db ./sqlite_select_users_name_sex tests/fixtures/tiny.db
 
 run-tests

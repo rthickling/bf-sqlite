@@ -42,6 +42,9 @@ generate_known_bf() {
     sqlite_delete)
       [ -f "$SCRIPT_DIR/gen_delete_bf.py" ] && python3 "$SCRIPT_DIR/gen_delete_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
       ;;
+    sqlite_create_log_table)
+      [ -f "$SCRIPT_DIR/gen_create_table_bf.py" ] && python3 "$SCRIPT_DIR/gen_create_table_bf.py" log ts:INT value:TEXT > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
     sqlite_select_users_name)
       [ -f "$SCRIPT_DIR/gen_select_bf.py" ] && python3 "$SCRIPT_DIR/gen_select_bf.py" users name > "$BF_DIR/$phase.bf" 2>/dev/null || true
       ;;
@@ -58,7 +61,7 @@ phase_cflags() {
     sqlite_header_inspector|sqlite_header_parser|sqlite_page1_parser)
       printf '%s\n' "${CFLAGS:--O2}"
       ;;
-    sqlite_schema_walk|sqlite_table_scan|sqlite_insert|sqlite_update|sqlite_delete|sqlite_select_users_name|sqlite_select_users_name_sex)
+    sqlite_schema_walk|sqlite_table_scan|sqlite_insert|sqlite_update|sqlite_delete|sqlite_create_log_table|sqlite_select_users_name|sqlite_select_users_name_sex)
       printf '%s\n' "-O0"
       ;;
     *)
@@ -116,6 +119,7 @@ else
   build_phase_if_present sqlite_insert
   build_phase_if_present sqlite_update
   build_phase_if_present sqlite_delete
+  build_phase_if_present sqlite_create_log_table
   build_phase_if_present sqlite_select_users_name
   build_phase_if_present sqlite_select_users_name_sex
 fi

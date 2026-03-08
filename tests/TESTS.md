@@ -9,6 +9,7 @@ This test suite is meant to prove the interesting claims quickly.
 | Pager returns SQLite header hex | `pager_header` |
 | Pager returns full page hex | `pager_page` |
 | BrainFuck can scan a real table | `table_scan` |
+| BrainFuck can create a new empty table | `create_table` |
 | BrainFuck can project selected columns | `select_name`, `select_name_sex` |
 | BrainFuck can write a row | `insert` |
 | BrainFuck can update a row | `update` |
@@ -37,6 +38,7 @@ Selected checks:
 
 ```bash
 run-tests table_scan
+run-tests create_table
 run-tests select_name
 run-tests select_name_sex
 run-tests insert
@@ -51,6 +53,7 @@ run-tests delete
   - `2|bob|M|England`
   - `3|bert|M|Australia`
   - `4|jude|M|USA`
+- `create_table` should add `log(ts INT, value TEXT)` as an empty table
 - `select_name` should match:
   - `alice`
   - `bob`
@@ -72,6 +75,7 @@ run-tests delete
 - `tests/run_tests.sh` reuses existing demo executables and only rebuilds stale generated programs.
 - The larger generated programs compile more reliably with `GCC="clang -O0"`.
 - `table_scan` is the slowest test; generated table-scan BF is large.
+- `create_table` is intentionally narrow: one empty-table demo on the current fixture shape.
 
 ## Fixtures
 

@@ -2,7 +2,7 @@
 
 **SQLite file-format access in BrainFuck** : an experiment in interacting with SQLite databases from Brainfuck using only standard Linux primitives.
 
-The shell side only moves bytes. The BrainFuck side does the interesting work: header parsing, page reads, schema walking, table scans, limited column projection, and small controlled writes.
+The shell side only moves bytes. The BrainFuck side does the interesting work: header parsing, page reads, schema walking, table scans, limited column projection, narrow create-table demos, and small controlled writes.
 
 ## Why I Built This
 
@@ -16,6 +16,7 @@ In roughly a day of part-time work, this repo went from idea to a working demo t
 - walk schema pages
 - scan a table
 - project selected columns from the demo table
+- create one new empty demo table
 - perform small controlled writes
 
 ## What works now
@@ -26,6 +27,8 @@ In roughly a day of part-time work, this repo went from idea to a working demo t
 - Table scan
 - Limited `SELECT`-style projection on the demo `users` table:
   `SELECT name FROM users;` and `SELECT name, sex FROM users;`
+- Narrow `CREATE TABLE` demo:
+  `CREATE TABLE log (ts INT, value TEXT);`
 - `INSERT`, `UPDATE`, and `DELETE` on the tiny demo database
 
 ## Quick start
@@ -71,6 +74,22 @@ SELECT name, sex FROM users;
 Current scope is intentionally small: single-table projection on the demo
 `users` table only, with no `WHERE`, `ORDER BY`, joins, or expressions.
 
+Create a new empty demo table:
+
+```bash
+run-bf-db ./sqlite_create_log_table tests/fixtures/tiny.db
+```
+
+This is the current `CREATE TABLE` equivalent:
+
+```sql
+CREATE TABLE log (ts INT, value TEXT);
+```
+
+Current scope is intentionally small here too: one narrow empty-table create
+demo on the current 4096-byte fixture shape, with no indexes, constraints,
+page splits, journaling, or general SQL parsing.
+
 Run the proof suite:
 
 ```bash
@@ -106,6 +125,8 @@ The protocol is intentionally small:
 - `examples/01_hello_header.bf` is the minimal runnable demo
 - `sqlite_select_users_name` and `sqlite_select_users_name_sex` are the built
   `SELECT` equivalents in the demo
+- `sqlite_create_log_table` is the built `CREATE TABLE log (ts INT, value TEXT);`
+  equivalent in the demo
 - `tests/run_tests.sh` is the proof runner behind `run-tests`
 - `docs/USAGE.md` explains the pager protocol and BF integration model
 - `tests/TESTS.md` summarizes what is verified
