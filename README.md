@@ -21,6 +21,7 @@ In roughly a day of part-time work, this repo went from idea to a working demo t
 - Page reads
 - Schema walk
 - Table scan
+- Limited column projection on the demo `users` table
 - `INSERT`, `UPDATE`, and `DELETE` on the tiny demo database
 
 ## Quick start
@@ -47,6 +48,12 @@ Scan the demo table:
 
 ```bash
 run-bf-db ./phase5_table_scan tests/fixtures/tiny.db
+```
+
+Project selected columns from the demo table:
+
+```bash
+run-bf-db ./phase9_select_users_name_sex tests/fixtures/tiny.db
 ```
 
 Run the proof suite:
@@ -81,6 +88,7 @@ The protocol is intentionally small:
 
 - `scripts/run_bf_db.sh` runs any `.bf` file or built phase executable against a database
 - `examples/01_hello_header.bf` is the minimal runnable demo
+- `phase9_select_users_name_sex` is the simplest `SELECT name,sex FROM users;` equivalent
 - `docs/USAGE.md` explains the pager protocol and BF integration model
 - `tests/TESTS.md` summarizes what is verified
 

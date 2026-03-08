@@ -126,6 +126,74 @@ run_table_scan_test() {
   rm -f "$CAPTURE" "$CAPTURE_STDERR"
 }
 
+run_select_projection_test() {
+  local test_name="$1"
+  local generator_args="$2"
+  local sql="$3"
+  local expected_file="$4"
+  echo "=== Phase 9: $test_name ==="
+  local bf="$PROJECT_DIR/bf/${test_name}.bf"
+  local exe="$PROJECT_DIR/$test_name"
+
+  if command -v "$BF2C" >/dev/null 2>&1 && [ -f "$PROJECT_DIR/scripts/gen_select_bf.py" ]; then
+    echo "Building $test_name..."
+    python3 "$PROJECT_DIR/scripts/gen_select_bf.py" $generator_args > "$bf" 2>/dev/null || true
+    BF2C="$BF2C" GCC="${GCC:-clang -O0}" "$PROJECT_DIR/scripts/build_bf.sh" "$bf" 2>/dev/null || true
+  fi
+
+  if [ ! -x "$exe" ]; then
+    echo "SKIP: $test_name not built (need bf2c + gen_select_bf)"
+    return 0
+  fi
+  if [ ! -f "$FIXTURES/tiny.db" ] || [ ! -s "$FIXTURES/tiny.db" ]; then
+    echo "SKIP: tiny.db missing or empty"
+    return 0
+  fi
+
+  local actual=""
+  actual=$("$PROJECT_DIR/scripts/run_bf_db.sh" "$exe" "$FIXTURES/tiny.db" 2>/dev/null || true)
+
+  local expected=""
+  if command -v sqlite3 >/dev/null 2>&1; then
+    expected=$(sqlite3 "$FIXTURES/tiny.db" "$sql" 2>/dev/null || true)
+  fi
+  if [ -z "$expected" ] && [ -f "$expected_file" ]; then
+    expected=$(<"$expected_file")
+  fi
+
+  if [ "$actual" = "$expected" ]; then
+    echo "OK: $test_name output correct"
+  else
+    echo "FAIL: $test_name output mismatch"
+    echo "Expected:"
+    printf '%s\n' "$expected"
+    echo "Got:"
+    printf '%s\n' "$actual"
+    exit 1
+  fi
+}
+
+run_select_invalid_spec_test() {
+  local test_name="$1"
+  local expected_message="$2"
+  shift 2
+  echo "=== Phase 9: $test_name ==="
+  local output=""
+
+  if output=$(python3 "$PROJECT_DIR/scripts/gen_select_bf.py" "$@" 2>&1 >/dev/null); then
+    echo "FAIL: expected generator failure for $test_name"
+    exit 1
+  fi
+
+  if printf '%s' "$output" | grep -Fq "$expected_message"; then
+    echo "OK: $test_name failed clearly"
+  else
+    echo "FAIL: unexpected error output for $test_name"
+    printf '%s\n' "$output"
+    exit 1
+  fi
+}
+
 run_update_test() {
   echo "=== Phase 7: update ==="
   local exe="$PROJECT_DIR/phase7_update"
@@ -342,6 +410,18 @@ run_all_tests() {
     run_shell_test pager_header
     run_shell_test pager_page
     run_table_scan_test
+    run_select_projection_test \
+      phase9_select_users_name \
+      "users name" \
+      "SELECT name FROM users ORDER BY id" \
+      "$SCRIPT_DIR/expected_select_users_name.txt"
+    run_select_projection_test \
+      phase9_select_users_name_sex \
+      "users name sex" \
+      "SELECT name||'|'||sex FROM users ORDER BY id" \
+      "$SCRIPT_DIR/expected_select_users_name_sex.txt"
+    run_select_invalid_spec_test select_invalid_column "Unknown column(s)" users nope
+    run_select_invalid_spec_test select_invalid_table "Unsupported table" nope name
     run_insert_test
     run_update_test
     run_delete_test
@@ -360,11 +440,27 @@ if [ $# -gt 0 ]; then
     case "$t" in
       pager_header|pager_page) run_shell_test "$t" ;;
       table_scan) run_table_scan_test ;;
+      select_name)
+        run_select_projection_test \
+          phase9_select_users_name \
+          "users name" \
+          "SELECT name FROM users ORDER BY id" \
+          "$SCRIPT_DIR/expected_select_users_name.txt"
+        ;;
+      select_name_sex)
+        run_select_projection_test \
+          phase9_select_users_name_sex \
+          "users name sex" \
+          "SELECT name||'|'||sex FROM users ORDER BY id" \
+          "$SCRIPT_DIR/expected_select_users_name_sex.txt"
+        ;;
+      select_invalid_column) run_select_invalid_spec_test "$t" "Unknown column(s)" users nope ;;
+      select_invalid_table) run_select_invalid_spec_test "$t" "Unsupported table" nope name ;;
       insert) run_insert_test ;;
       update) run_update_test ;;
       delete) run_delete_test ;;
       *)
-        echo "Unknown test: $t (use: pager_header, pager_page, table_scan, insert, update, delete, or test_*.bf)"
+        echo "Unknown test: $t (use: pager_header, pager_page, table_scan, select_name, select_name_sex, select_invalid_column, select_invalid_table, insert, update, delete, or test_*.bf)"
         exit 1
         ;;
     esac

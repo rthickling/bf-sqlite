@@ -8,7 +8,7 @@
 *.c
 *.o
 *.out
-phase[1-8]*
+phase[1-9]*
 01_hello_header
 02_request_page
 03_table_scan

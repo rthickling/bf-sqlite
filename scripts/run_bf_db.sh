@@ -58,10 +58,11 @@ ensure_exe() {
   [ -x "$exe" ] && return 0
 
   case "$base" in
-    phase[1-8]*)
+    phase[1-9]*)
       if [ -x "$SCRIPT_DIR/build_bf.sh" ]; then
-        echo "Building project phase executables..."
-        "$SCRIPT_DIR/build_bf.sh"
+        local bf_source="$PROJECT_DIR/bf/${base}.bf"
+        echo "Building $base..."
+        "$SCRIPT_DIR/build_bf.sh" "$bf_source"
       fi
       ;;
   esac

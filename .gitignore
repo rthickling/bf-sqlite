@@ -5,7 +5,7 @@
 a.bf
 
 # Executables (bf2c + gcc) built at the repo root, e.g. phase1_header_inspector
-/phase[1-8]*
+/phase[1-9]*
 /01_hello_header
 /02_request_page
 /03_table_scan
@@ -26,6 +26,8 @@ bf/phase5_table_scan.bf
 bf/phase6_insert.bf
 bf/phase7_update.bf
 bf/phase8_delete.bf
+bf/phase9_select_users_name.bf
+bf/phase9_select_users_name_sex.bf
 
 # Test fixtures (created from tiny.sql.txt)
 tests/fixtures/tiny.db

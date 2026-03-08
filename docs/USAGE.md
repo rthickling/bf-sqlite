@@ -66,6 +66,35 @@ Hex rules:
 
 The smallest runnable example is `examples/01_hello_header.bf`.
 
+## Limited SELECT projection
+
+The repo now includes a small projection step for the demo `users` table. It is
+the equivalent of:
+
+```sql
+SELECT name, sex FROM users;
+```
+
+using the built phase:
+
+```bash
+export PATH="$PWD/bin:$PATH"
+run-bf-db ./phase9_select_users_name_sex tests/fixtures/tiny.db
+```
+
+For other column subsets on the same demo table, generate a BF program with:
+
+```bash
+python3 scripts/gen_select_bf.py users name sex > bf/my_select_users_name_sex.bf
+run-bf-db bf/my_select_users_name_sex.bf tests/fixtures/tiny.db
+```
+
+Current limits:
+
+- demo table only: `users`
+- columns must come from `id`, `name`, `sex`, `rugby`
+- no `WHERE`, `ORDER BY`, joins, or expressions
+
 ## Helpful building blocks
 
 - `bf/lib_hex_decode.bf` for hex-pair to byte decoding
@@ -90,6 +119,8 @@ The built phase binaries are the easiest way to see the current capability:
 - `phase6_insert`
 - `phase7_update`
 - `phase8_delete`
+- `phase9_select_users_name`
+- `phase9_select_users_name_sex`
 
 If you call one of these through `scripts/run_bf_db.sh` and it is missing, the script will try to build it for you.
 

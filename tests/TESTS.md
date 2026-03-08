@@ -9,6 +9,7 @@ This test suite is meant to prove the interesting claims quickly.
 | Pager returns SQLite header hex | `pager_header` |
 | Pager returns full page hex | `pager_page` |
 | BrainFuck can scan a real table | `table_scan` |
+| BrainFuck can project selected columns | `select_name`, `select_name_sex` |
 | BrainFuck can write a row | `insert` |
 | BrainFuck can update a row | `update` |
 | BrainFuck can delete a row | `delete` |
@@ -36,6 +37,8 @@ Selected checks:
 
 ```bash
 run-tests table_scan
+run-tests select_name
+run-tests select_name_sex
 run-tests insert
 run-tests update
 run-tests delete
@@ -48,6 +51,16 @@ run-tests delete
   - `2|bob|M|England`
   - `3|bert|M|Australia`
   - `4|jude|M|USA`
+- `select_name` should match:
+  - `alice`
+  - `bob`
+  - `bert`
+  - `jude`
+- `select_name_sex` should match:
+  - `alice|F`
+  - `bob|M`
+  - `bert|M`
+  - `jude|M`
 - `insert` should add `5|chip|M|Wales`
 - `update` should change `jude` to `judy`
 - `delete` should remove row `4`

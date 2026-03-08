@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Build BrainFuck sources to executables using bf2c + gcc
 # Usage: ./build_bf.sh [program.bf ...]
-# If no args, builds phases 1–8.
+# If no args, builds phases 1–9.
 #
 # Env:
 #   BF2C     - bf2c binary (default: bf2c)
 #   GCC      - gcc binary (default: gcc)
 #   CFLAGS   - gcc flags for phases 1–3 (default: -O2).
-#              Phases 4–8 use -O0 by default (huge C can segfault gcc at -O2).
+#              Phases 4–9 use -O0 by default (huge C can segfault gcc at -O2).
 set -euo pipefail
 
 BF2C="${BF2C:-bf2c}"
@@ -16,6 +16,64 @@ GCC="${GCC:-gcc}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BF_DIR="$PROJECT_DIR/bf"
+
+generate_known_bf() {
+  local phase="$1"
+
+  case "$phase" in
+    phase2_header_parser)
+      [ -f "$SCRIPT_DIR/gen_phase2_bf.py" ] && python3 "$SCRIPT_DIR/gen_phase2_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase3_page1_parser)
+      [ -f "$SCRIPT_DIR/gen_phase3_bf.py" ] && python3 "$SCRIPT_DIR/gen_phase3_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase4_schema_walk)
+      [ -f "$SCRIPT_DIR/gen_phase4_bf.py" ] && python3 "$SCRIPT_DIR/gen_phase4_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase5_table_scan)
+      [ -f "$SCRIPT_DIR/gen_phase5_bf.py" ] && python3 "$SCRIPT_DIR/gen_phase5_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase6_insert)
+      [ -f "$SCRIPT_DIR/gen_insert_bf.py" ] && python3 "$SCRIPT_DIR/gen_insert_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase7_update)
+      [ -f "$SCRIPT_DIR/gen_update_bf.py" ] && python3 "$SCRIPT_DIR/gen_update_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase8_delete)
+      [ -f "$SCRIPT_DIR/gen_delete_bf.py" ] && python3 "$SCRIPT_DIR/gen_delete_bf.py" > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase9_select_users_name)
+      [ -f "$SCRIPT_DIR/gen_select_bf.py" ] && python3 "$SCRIPT_DIR/gen_select_bf.py" users name > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+    phase9_select_users_name_sex)
+      [ -f "$SCRIPT_DIR/gen_select_bf.py" ] && python3 "$SCRIPT_DIR/gen_select_bf.py" users name sex > "$BF_DIR/$phase.bf" 2>/dev/null || true
+      ;;
+  esac
+}
+
+phase_cflags() {
+  local phase="$1"
+
+  case "$phase" in
+    phase1_*|phase2_*|phase3_*)
+      printf '%s\n' "${CFLAGS:--O2}"
+      ;;
+    phase4_*|phase5_*|phase6_*|phase7_*|phase8_*|phase9_*)
+      printf '%s\n' "-O0"
+      ;;
+    *)
+      printf '%s\n' "${CFLAGS:--O2}"
+      ;;
+  esac
+}
+
+build_phase_if_present() {
+  local phase="$1"
+  local bf="$BF_DIR/$phase.bf"
+
+  generate_known_bf "$phase"
+  [ -f "$bf" ] && build_one "$bf" "$(phase_cflags "$phase")" || true
+}
 
 build_one() {
   local bf="$1"
@@ -31,43 +89,33 @@ build_one() {
 
 if [ $# -gt 0 ]; then
   for bf in "$@"; do
-    build_one "$bf"
+    local_phase="$(basename "${bf%.bf}")"
+    case "$local_phase" in
+      phase[1-9]*)
+        generate_known_bf "$local_phase"
+        if [ -f "$bf" ]; then
+          build_one "$bf" "$(phase_cflags "$local_phase")"
+        elif [ -f "$BF_DIR/$local_phase.bf" ]; then
+          build_one "$BF_DIR/$local_phase.bf" "$(phase_cflags "$local_phase")"
+        else
+          echo "BrainFuck source not found: $bf"
+          exit 1
+        fi
+        ;;
+      *)
+        build_one "$bf"
+        ;;
+    esac
   done
 else
-  build_one "$BF_DIR/phase1_header_inspector.bf"
-  # Phase 2: regenerate BF then build
-  if [ -f "$SCRIPT_DIR/gen_phase2_bf.py" ]; then
-    python3 "$SCRIPT_DIR/gen_phase2_bf.py" > "$BF_DIR/phase2_header_parser.bf" 2>/dev/null || true
-  fi
-  [ -f "$BF_DIR/phase2_header_parser.bf" ] && build_one "$BF_DIR/phase2_header_parser.bf" || true
-  # Phase 3: regenerate BF then build
-  if [ -f "$SCRIPT_DIR/gen_phase3_bf.py" ]; then
-    python3 "$SCRIPT_DIR/gen_phase3_bf.py" > "$BF_DIR/phase3_page1_parser.bf" 2>/dev/null || true
-  fi
-  [ -f "$BF_DIR/phase3_page1_parser.bf" ] && build_one "$BF_DIR/phase3_page1_parser.bf" || true
-  # Phase 4: schema walker
-  if [ -f "$SCRIPT_DIR/gen_phase4_bf.py" ]; then
-    python3 "$SCRIPT_DIR/gen_phase4_bf.py" > "$BF_DIR/phase4_schema_walk.bf" 2>/dev/null || true
-  fi
-  [ -f "$BF_DIR/phase4_schema_walk.bf" ] && build_one "$BF_DIR/phase4_schema_walk.bf" "-O0" || true
-  # Phase 5: table scan (-O0 to avoid gcc segfault on huge C)
-  if [ -f "$SCRIPT_DIR/gen_phase5_bf.py" ]; then
-    python3 "$SCRIPT_DIR/gen_phase5_bf.py" > "$BF_DIR/phase5_table_scan.bf" 2>/dev/null || true
-  fi
-  [ -f "$BF_DIR/phase5_table_scan.bf" ] && build_one "$BF_DIR/phase5_table_scan.bf" "-O0" || true
-  # Phase 6: INSERT (add row to users)
-  if [ -f "$SCRIPT_DIR/gen_insert_bf.py" ]; then
-    python3 "$SCRIPT_DIR/gen_insert_bf.py" > "$BF_DIR/phase6_insert.bf" 2>/dev/null || true
-  fi
-  [ -f "$BF_DIR/phase6_insert.bf" ] && build_one "$BF_DIR/phase6_insert.bf" "-O0" || true
-  # Phase 7: UPDATE (jude -> judy in row 4)
-  if [ -f "$SCRIPT_DIR/gen_update_bf.py" ]; then
-    python3 "$SCRIPT_DIR/gen_update_bf.py" > "$BF_DIR/phase7_update.bf" 2>/dev/null || true
-  fi
-  [ -f "$BF_DIR/phase7_update.bf" ] && build_one "$BF_DIR/phase7_update.bf" "-O0" || true
-  # Phase 8: DELETE (remove row 4 from users)
-  if [ -f "$SCRIPT_DIR/gen_delete_bf.py" ]; then
-    python3 "$SCRIPT_DIR/gen_delete_bf.py" > "$BF_DIR/phase8_delete.bf" 2>/dev/null || true
-  fi
-  [ -f "$BF_DIR/phase8_delete.bf" ] && build_one "$BF_DIR/phase8_delete.bf" "-O0" || true
+  build_phase_if_present phase1_header_inspector
+  build_phase_if_present phase2_header_parser
+  build_phase_if_present phase3_page1_parser
+  build_phase_if_present phase4_schema_walk
+  build_phase_if_present phase5_table_scan
+  build_phase_if_present phase6_insert
+  build_phase_if_present phase7_update
+  build_phase_if_present phase8_delete
+  build_phase_if_present phase9_select_users_name
+  build_phase_if_present phase9_select_users_name_sex
 fi
