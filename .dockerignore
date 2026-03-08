@@ -1,0 +1,23 @@
+# Exclude from Docker build context (speeds up COPY)
+.git
+.gitignore
+.history
+.cursor
+*.swp
+*~
+*.c
+*.o
+*.out
+phase[1-8]*
+01_hello_header
+02_request_page
+03_table_scan
+04_write_commands
+template
+hello_schema
+dump_table
+tests/test_echo
+tests/test_hex_decode
+tests/test_hex_one
+tests/test_magic
+tests/fixtures/tiny.db

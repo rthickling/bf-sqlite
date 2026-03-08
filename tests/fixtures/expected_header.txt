@@ -1,0 +1,5 @@
+# Expected header values for tiny.db (after creation)
+# page_size: typically 4096
+# page_count: 2 or 3
+# read_version: 1
+# write_version: 1

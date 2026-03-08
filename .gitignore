@@ -1,0 +1,44 @@
+# Build outputs
+*.c
+*.o
+*.out
+a.bf
+
+# Executables (bf2c + gcc) built at the repo root, e.g. phase1_header_inspector
+/phase[1-8]*
+/01_hello_header
+/02_request_page
+/03_table_scan
+/04_write_commands
+/template
+/hello_schema
+/dump_table
+/tests/test_echo
+/tests/test_hex_decode
+/tests/test_hex_one
+/tests/test_magic
+
+# Generated BF (from gen_*_bf.py)
+bf/phase2_header_parser.bf
+bf/phase3_page1_parser.bf
+bf/phase4_schema_walk.bf
+bf/phase5_table_scan.bf
+bf/phase6_insert.bf
+bf/phase7_update.bf
+bf/phase8_delete.bf
+
+# Test fixtures (created from tiny.sql.txt)
+tests/fixtures/tiny.db
+
+# FIFOs and temp
+pager.req
+pager.res
+/tmp/pager.*
+
+# Local editor history
+.history/
+.cursor/
+
+# Editor
+*.swp
+*~

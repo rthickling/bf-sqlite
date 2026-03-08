@@ -1,0 +1,5 @@
+1|alice|F|France
+2|bob|M|England
+3|bert|M|Australia
+4|jude|M|USA
+5|chip|M|Wales

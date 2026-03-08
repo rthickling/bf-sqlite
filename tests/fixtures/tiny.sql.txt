@@ -1,0 +1,8 @@
+-- SQL to create tests/fixtures/tiny.db
+-- Run: sqlite3 tests/fixtures/tiny.db < tests/fixtures/tiny.sql.txt
+
+CREATE TABLE users (id INT, name TEXT, sex TEXT, rugby TEXT);
+INSERT INTO users VALUES (1, 'alice', 'F', 'France');
+INSERT INTO users VALUES (2, 'bob', 'M', 'England');
+INSERT INTO users VALUES (3, 'bert', 'M', 'Australia');
+INSERT INTO users VALUES (4, 'jude', 'M', 'USA');
