@@ -45,7 +45,7 @@ This document provides a comprehensive, implementable plan for building a BrainF
 - Shell: `echo "H" | pager.sh db` returns 200 hex chars + newline
 - BF: requests H, reads 200 hex chars, decodes to 100 bytes
 
-**Status**: Phase 1–3 done. Phase 4: `scripts/gen_phase4_bf.py` parses the first `sqlite_schema` cell, extracts `rootpage`, decodes the record at offset 4034, and outputs the result. Build with `./scripts/build_bf.sh`, run with `INSPECTOR=./phase4_schema_walk ./scripts/run_inspector.sh db`.
+**Status**: The header/page parsing work is done. `scripts/gen_sqlite_schema_walk_bf.py` parses the first `sqlite_schema` cell, extracts `rootpage`, decodes the record at offset 4034, and outputs the result. Build with `./scripts/build_bf.sh`, run with `INSPECTOR=./sqlite_schema_walk ./scripts/run_inspector.sh db`.
 
 ---
 
@@ -159,7 +159,7 @@ This document provides a comprehensive, implementable plan for building a BrainF
 - Handles fixed small schema (e.g. id INT, name TEXT)
 - Output is human-readable
 
-**Status**: Phase 5 done. `scripts/gen_phase5_bf.py` does Phase 1–4, then R 4096 2, reads page 2, decodes cells, outputs `1|alice\n2|bob\n` for tiny.db users table.
+**Status**: The table-scan generator is done. `scripts/gen_sqlite_table_scan_bf.py` reads the fixture, emits BF for the `users` scan, and outputs the expected rows for `tiny.db`.
 
 ---
 
@@ -186,11 +186,11 @@ bf/
   lib_big_endian.bf    # 2/4-byte BE decode
   lib_varint.bf        # SQLite varint decode
   lib_decimal_out.bf   # Byte → ASCII decimal (for R cmd)
-  phase1_header_inspector.bf
-  phase2_page1_parser.bf
-  phase3_cellptrs.bf
-  phase4_schema_walk.bf
-  phase5_table_scan.bf
+  sqlite_header_inspector.bf
+  sqlite_header_parser.bf
+  sqlite_page1_parser.bf
+  sqlite_schema_walk.bf
+  sqlite_table_scan.bf
   bf_sqlite.bf         # Integrated engine (later)
 ```
 
@@ -290,7 +290,7 @@ kill $PAGER_PID
 User runs: ./run_reader.sh my.db my_table
 
 1. run_reader.sh starts pager.sh with my.db
-2. run_reader.sh compiles bf_sqlite.bf (or phase5_table_scan.bf) via bf2c + gcc
+2. run_reader.sh compiles bf_sqlite.bf (or sqlite_table_scan.bf) via bf2c + gcc
 3. BF executable connects to FIFOs
 4. BF: sends H, gets header, parses page size
 5. BF: sends R <page_size> 1, gets page 1
@@ -382,7 +382,7 @@ If you want to use the project with a local toolchain instead of the Docker wrap
    - a C compiler (`gcc` or `clang`)
    - `sqlite3` if you want the fixture DB created automatically
 
-2. Build the phase programs:
+2. Build the named SQLite demo programs:
    ```bash
    ./scripts/build_bf.sh
    ```
@@ -390,7 +390,7 @@ If you want to use the project with a local toolchain instead of the Docker wrap
 3. Run a BF program against the demo database:
    ```bash
    ./scripts/run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
-   ./scripts/run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
+   ./scripts/run_bf_db.sh ./sqlite_table_scan tests/fixtures/tiny.db
    ```
 
 4. Run the tests:

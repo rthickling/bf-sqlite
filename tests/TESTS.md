@@ -69,8 +69,9 @@ run-tests delete
 
 - `run-tests` is the Docker-first path once `bin/` is on your `PATH`. The local/manual runner is `./tests/run_tests.sh`.
 - `tests/run_tests.sh` will create `tests/fixtures/tiny.db` when `sqlite3` is available.
-- Phases 4–8 compile more reliably with `GCC="clang -O0"`.
-- `table_scan` is the slowest test; generated phase 5 BF is large.
+- `tests/run_tests.sh` reuses existing demo executables and only rebuilds stale generated programs.
+- The larger generated programs compile more reliably with `GCC="clang -O0"`.
+- `table_scan` is the slowest test; generated table-scan BF is large.
 
 ## Fixtures
 

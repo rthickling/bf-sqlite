@@ -1,7 +1,7 @@
-# Phase 2: Header Parser Spec
+# SQLite Header Parser Spec
 
 ## Input
-- 100 decoded bytes at tape 512..611 (from Phase 1 hex decode)
+- 100 decoded bytes at tape 512..611 (from the header read + hex decode step)
 
 ## Magic validation
 - Bytes 512..527 must equal: 83 81 76 105 116 101 32 102 111 114 109 97 116 32 51 0  
@@ -16,4 +16,4 @@
 - 536..539: freelist count
 
 ## Output
-- Phase 2 program: after decode + magic check, output "OK" plus page_size (decimal ASCII, from bytes 16–17 big-endian) or "FAIL" plus newline. Page size is output as up to 5 digits (e.g. 4096 or 04096).
+- The `sqlite_header_parser` program should, after decode + magic check, output `OK` plus page size (decimal ASCII, from bytes 16–17 big-endian) or `FAIL` plus newline. Page size is output as up to 5 digits (e.g. `4096` or `04096`).

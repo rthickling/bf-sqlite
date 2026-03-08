@@ -4,15 +4,15 @@
 # Usage: ./run_bf_db.sh <program.bf|program> <database.db>
 #
 # If given a .bf file, compiles it with bf2c + a C compiler first.
-# If given a missing phase executable (e.g. ./phase5_table_scan), tries to
-# build the project phases automatically.
+# If given a missing named SQLite demo executable (e.g. ./sqlite_table_scan),
+# tries to build it automatically.
 # If tests/fixtures/tiny.db is requested and missing, tries to create it from
 # tests/fixtures/tiny.sql.txt when sqlite3 is available.
 # Connects the program to the pager via FIFOs: program stdout -> pager, pager -> program stdin.
 #
 # Examples:
 #   ./run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
-#   ./run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
+#   ./run_bf_db.sh ./sqlite_table_scan tests/fixtures/tiny.db
 #
 set -euo pipefail
 
@@ -58,7 +58,7 @@ ensure_exe() {
   [ -x "$exe" ] && return 0
 
   case "$base" in
-    phase[1-9]*)
+    sqlite_*)
       if [ -x "$SCRIPT_DIR/build_bf.sh" ]; then
         local bf_source="$PROJECT_DIR/bf/${base}.bf"
         echo "Building $base..."

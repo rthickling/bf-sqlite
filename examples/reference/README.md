@@ -8,5 +8,5 @@ Start with:
 
 - `export PATH="$PWD/bin:$PATH"`
 - `examples/01_hello_header.bf`
-- `./phase5_table_scan`
+- `./sqlite_table_scan`
 - `run-tests`

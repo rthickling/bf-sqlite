@@ -13,4 +13,4 @@
 # ... read 200 hex chars + newline ...
 # 3. Decode first 16 bytes, compare to "SQLite format 3\0"
 # 4. Decode bytes 16-17 (page size), output
-# (Full implementation in phase1_header_inspector.bf)
+# (Full implementation in sqlite_header_inspector.bf)

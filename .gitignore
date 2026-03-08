@@ -4,8 +4,8 @@
 *.out
 a.bf
 
-# Executables (bf2c + gcc) built at the repo root, e.g. phase1_header_inspector
-/phase[1-9]*
+# Executables (bf2c + gcc) built at the repo root, e.g. sqlite_header_inspector
+/sqlite_*
 /01_hello_header
 /02_request_page
 /03_table_scan
@@ -19,15 +19,15 @@ a.bf
 /tests/test_magic
 
 # Generated BF (from gen_*_bf.py)
-bf/phase2_header_parser.bf
-bf/phase3_page1_parser.bf
-bf/phase4_schema_walk.bf
-bf/phase5_table_scan.bf
-bf/phase6_insert.bf
-bf/phase7_update.bf
-bf/phase8_delete.bf
-bf/phase9_select_users_name.bf
-bf/phase9_select_users_name_sex.bf
+bf/sqlite_header_parser.bf
+bf/sqlite_page1_parser.bf
+bf/sqlite_schema_walk.bf
+bf/sqlite_table_scan.bf
+bf/sqlite_insert.bf
+bf/sqlite_update.bf
+bf/sqlite_delete.bf
+bf/sqlite_select_users_name.bf
+bf/sqlite_select_users_name_sex.bf
 
 # Test fixtures (created from tiny.sql.txt)
 tests/fixtures/tiny.db

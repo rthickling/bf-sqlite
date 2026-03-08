@@ -12,6 +12,9 @@ build-image
 run-bf-db my_program.bf tests/fixtures/tiny.db
 ```
 
+For the built demo phases and tests, the repo now reuses existing executables and
+only rebuilds a phase when its generator, generated `.bf`, or fixture DB changed.
+
 Local toolchain:
 
 ```bash
@@ -75,11 +78,11 @@ the equivalent of:
 SELECT name, sex FROM users;
 ```
 
-using the built phase:
+using the built program:
 
 ```bash
 export PATH="$PWD/bin:$PATH"
-run-bf-db ./phase9_select_users_name_sex tests/fixtures/tiny.db
+run-bf-db ./sqlite_select_users_name_sex tests/fixtures/tiny.db
 ```
 
 For other column subsets on the same demo table, generate a BF program with:
@@ -95,11 +98,14 @@ Current limits:
 - columns must come from `id`, `name`, `sex`, `rugby`
 - no `WHERE`, `ORDER BY`, joins, or expressions
 
+This is intentionally a BF-native query helper, not a full SQL parser or SQL
+engine.
+
 ## Helpful building blocks
 
 - `bf/lib_hex_decode.bf` for hex-pair to byte decoding
 - `scripts/emit_bf.py` for generating BF that prints literal command text
-- `scripts/build_bf.sh` for regenerating and compiling the phase programs
+- `scripts/build_bf.sh` for regenerating and compiling the named SQLite demo programs
 
 Example:
 
@@ -107,20 +113,20 @@ Example:
 python3 scripts/emit_bf.py "R 4096 2\n"
 ```
 
-## Phase programs
+## Demo programs
 
-The built phase binaries are the easiest way to see the current capability:
+The built binaries are the easiest way to see the current capability:
 
-- `phase1_header_inspector`
-- `phase2_header_parser`
-- `phase3_page1_parser`
-- `phase4_schema_walk`
-- `phase5_table_scan`
-- `phase6_insert`
-- `phase7_update`
-- `phase8_delete`
-- `phase9_select_users_name`
-- `phase9_select_users_name_sex`
+- `sqlite_header_inspector`
+- `sqlite_header_parser`
+- `sqlite_page1_parser`
+- `sqlite_schema_walk`
+- `sqlite_table_scan`
+- `sqlite_insert`
+- `sqlite_update`
+- `sqlite_delete`
+- `sqlite_select_users_name`
+- `sqlite_select_users_name_sex`
 
 If you call one of these through `scripts/run_bf_db.sh` and it is missing, the script will try to build it for you.
 
@@ -149,7 +155,7 @@ The current generators and write demos target this schema.
 |-------|-----|
 | `bf2c not found` | Set `BF2C=/path/to/bf2c` or use Docker |
 | `tiny.db` missing | Install `sqlite3` or use the Docker image |
-| large phases fail under `gcc` | Use `GCC="clang -O0"` |
+| large generated programs fail under `gcc` | Use `GCC="clang -O0"` for the larger generated programs |
 | pager hangs | Make sure your BF program consumes the whole response before sending the next command |
 
 ## See also
@@ -157,5 +163,5 @@ The current generators and write demos target this schema.
 - [README.md](../README.md)
 - [examples/README.md](../examples/README.md)
 - [tests/TESTS.md](../tests/TESTS.md)
-- [PHASE2_SPEC.md](PHASE2_SPEC.md)
+- [SQLITE_HEADER_PARSER_SPEC.md](SQLITE_HEADER_PARSER_SPEC.md)
 - [DETAILED_BUILD_PLAN.md](DETAILED_BUILD_PLAN.md)

@@ -13,11 +13,12 @@ export PATH="$PWD/bin:$PATH"
 | Demo | Command | Result |
 |------|---------|--------|
 | Header read | `run-bf-db examples/01_hello_header.bf tests/fixtures/tiny.db` | Prints `OK` |
-| Table scan | `run-bf-db ./phase5_table_scan tests/fixtures/tiny.db` | Prints the four `users` rows |
-| Limited SELECT | `run-bf-db ./phase9_select_users_name_sex tests/fixtures/tiny.db` | Prints `name|sex` for the demo `users` rows |
-| Write proofs | `run-tests insert update delete` | Verifies `INSERT`, `UPDATE`, and `DELETE` |
+| Table scan | `run-bf-db ./sqlite_table_scan tests/fixtures/tiny.db` | Prints the four `users` rows |
+| Limited SELECT | `run-bf-db ./sqlite_select_users_name_sex tests/fixtures/tiny.db` | Prints `name|sex` for the demo `users` rows |
+| Write proofs | `run-tests insert update delete` | Verifies `INSERT`, `UPDATE`, and `DELETE` on a writable copy of the demo DB |
 
-`scripts/run_bf_db.sh` will build missing phase binaries and create `tests/fixtures/tiny.db` when the necessary tools are available.
+`run-bf-db` will build missing demo binaries and create `tests/fixtures/tiny.db` when the necessary tools are available.
+`run-tests` reuses existing generated demo executables and only rebuilds stale ones.
 
 ## Reference material
 
@@ -26,4 +27,4 @@ Protocol sketches and partial examples live in `examples/reference/`.
 ## Notes
 
 - Comments use `#`; BrainFuck ignores them.
-- The heavier phase implementations live in `bf/`.
+- The heavier generated implementations live in `bf/`.

@@ -11,6 +11,40 @@ BF2C="${BF2C:-bf2c}"
 GCC="${GCC:-gcc}"
 TABLE_SCAN_TIMEOUT="${TABLE_SCAN_TIMEOUT:-180}"
 
+phase_needs_rebuild() {
+  local exe="$1"
+  local bf="$2"
+  local generator="$3"
+  local dependency="${4:-}"
+
+  [ ! -x "$exe" ] && return 0
+  [ ! -f "$bf" ] && return 0
+  [ -f "$generator" ] && [ "$generator" -nt "$bf" ] && return 0
+  [ "$bf" -nt "$exe" ] && return 0
+  [ -n "$dependency" ] && [ -f "$dependency" ] && [ "$dependency" -nt "$bf" ] && return 0
+  return 1
+}
+
+build_generated_phase() {
+  local phase_name="$1"
+  local generator="$2"
+  local bf="$3"
+  local exe="$4"
+  local compiler="$5"
+  local dependency="${6:-}"
+  shift 6
+
+  if ! command -v "$BF2C" >/dev/null 2>&1 || [ ! -f "$generator" ]; then
+    return 0
+  fi
+
+  if phase_needs_rebuild "$exe" "$bf" "$generator" "$dependency"; then
+    echo "Building $phase_name..."
+    python3 "$generator" "$@" > "$bf" 2>/dev/null || true
+    BF2C="$BF2C" GCC="$compiler" "$PROJECT_DIR/scripts/build_bf.sh" "$bf" 2>/dev/null || true
+  fi
+}
+
 run_shell_test() {
   local name="$1"
   local db="${2:-$FIXTURES/tiny.db}"
@@ -54,16 +88,18 @@ run_shell_test() {
 }
 
 run_table_scan_test() {
-  echo "=== Phase 5: table_scan ==="
-  local exe="$PROJECT_DIR/phase5_table_scan"
+  echo "=== sqlite_table_scan ==="
+  local exe="$PROJECT_DIR/sqlite_table_scan"
   local expected="$SCRIPT_DIR/expected_table_scan.txt"
-  if command -v "$BF2C" >/dev/null 2>&1 && [ -f "$PROJECT_DIR/scripts/gen_phase5_bf.py" ]; then
-    echo "Building phase5_table_scan..."
-    python3 "$PROJECT_DIR/scripts/gen_phase5_bf.py" > "$PROJECT_DIR/bf/phase5_table_scan.bf" 2>/dev/null || true
-    BF2C="$BF2C" GCC="${GCC:-clang -O0}" "$PROJECT_DIR/scripts/build_bf.sh" "$PROJECT_DIR/bf/phase5_table_scan.bf" 2>/dev/null || true
-  fi
+  build_generated_phase \
+    sqlite_table_scan \
+    "$PROJECT_DIR/scripts/gen_sqlite_table_scan_bf.py" \
+    "$PROJECT_DIR/bf/sqlite_table_scan.bf" \
+    "$exe" \
+    "${GCC:-clang -O0}" \
+    "$FIXTURES/tiny.db"
   if [ ! -x "$exe" ]; then
-    echo "SKIP: phase5_table_scan not built (need bf2c + gen_phase5)"
+    echo "SKIP: sqlite_table_scan not built (need bf2c + table-scan generator)"
     return 0
   fi
   if [ ! -f "$FIXTURES/tiny.db" ] || [ ! -s "$FIXTURES/tiny.db" ]; then
@@ -72,7 +108,7 @@ run_table_scan_test() {
   fi
   REQ="/tmp/pager.req.$$"
   RES="/tmp/pager.res.$$"
-  CAPTURE="/tmp/phase5_capture.$$"
+  CAPTURE="/tmp/sqlite_table_scan_capture.$$"
   rm -f "$REQ" "$RES" "$CAPTURE"
   mkfifo "$REQ" "$RES"
   REQ="$REQ" RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$FIXTURES/tiny.db" &
@@ -83,7 +119,7 @@ run_table_scan_test() {
   exec 3<>"$RES"
   # Unbuffer stdout so piped output is captured.
   echo "(table_scan timeout ${TABLE_SCAN_TIMEOUT}s)"
-  CAPTURE_STDERR="/tmp/phase5_stderr.$$"
+  CAPTURE_STDERR="/tmp/sqlite_table_scan_stderr.$$"
   if command -v stdbuf >/dev/null 2>&1; then
     timeout "$TABLE_SCAN_TIMEOUT" stdbuf -o0 "$exe" <"$RES" 2>"$CAPTURE_STDERR" | awk -v cap="$CAPTURE" -v req="$REQ" '{ print >> cap; fflush(cap); if ($0 == "H" || $0 ~ /^R /) { print >> req; fflush(req); } }' || true
   else
@@ -131,15 +167,19 @@ run_select_projection_test() {
   local generator_args="$2"
   local sql="$3"
   local expected_file="$4"
-  echo "=== Phase 9: $test_name ==="
+  echo "=== $test_name ==="
   local bf="$PROJECT_DIR/bf/${test_name}.bf"
   local exe="$PROJECT_DIR/$test_name"
 
-  if command -v "$BF2C" >/dev/null 2>&1 && [ -f "$PROJECT_DIR/scripts/gen_select_bf.py" ]; then
-    echo "Building $test_name..."
-    python3 "$PROJECT_DIR/scripts/gen_select_bf.py" $generator_args > "$bf" 2>/dev/null || true
-    BF2C="$BF2C" GCC="${GCC:-clang -O0}" "$PROJECT_DIR/scripts/build_bf.sh" "$bf" 2>/dev/null || true
-  fi
+  # shellcheck disable=SC2086
+  build_generated_phase \
+    "$test_name" \
+    "$PROJECT_DIR/scripts/gen_select_bf.py" \
+    "$bf" \
+    "$exe" \
+    "${GCC:-clang -O0}" \
+    "$FIXTURES/tiny.db" \
+    $generator_args
 
   if [ ! -x "$exe" ]; then
     echo "SKIP: $test_name not built (need bf2c + gen_select_bf)"
@@ -177,7 +217,7 @@ run_select_invalid_spec_test() {
   local test_name="$1"
   local expected_message="$2"
   shift 2
-  echo "=== Phase 9: $test_name ==="
+  echo "=== $test_name ==="
   local output=""
 
   if output=$(python3 "$PROJECT_DIR/scripts/gen_select_bf.py" "$@" 2>&1 >/dev/null); then
@@ -195,18 +235,20 @@ run_select_invalid_spec_test() {
 }
 
 run_update_test() {
-  echo "=== Phase 7: update ==="
-  local exe="$PROJECT_DIR/phase7_update"
-  if command -v "$BF2C" >/dev/null 2>&1 && [ -f "$PROJECT_DIR/scripts/gen_update_bf.py" ]; then
-    echo "Building phase7_update..."
-    python3 "$PROJECT_DIR/scripts/gen_update_bf.py" > "$PROJECT_DIR/bf/phase7_update.bf" 2>/dev/null || true
-    BF2C="$BF2C" GCC="${GCC:-gcc}" "$PROJECT_DIR/scripts/build_bf.sh" "$PROJECT_DIR/bf/phase7_update.bf" 2>/dev/null || true
-  fi
+  echo "=== sqlite_update ==="
+  local exe="$PROJECT_DIR/sqlite_update"
+  build_generated_phase \
+    sqlite_update \
+    "$PROJECT_DIR/scripts/gen_update_bf.py" \
+    "$PROJECT_DIR/bf/sqlite_update.bf" \
+    "$exe" \
+    "${GCC:-gcc}" \
+    "$FIXTURES/tiny.db"
   if [ ! -x "$exe" ]; then
     if ! command -v "$BF2C" >/dev/null 2>&1; then
-      echo "SKIP: phase7_update not built (bf2c not found; set BF2C or run ./scripts/build_bf.sh when available)"
+      echo "SKIP: sqlite_update not built (bf2c not found; set BF2C or run ./scripts/build_bf.sh when available)"
     else
-      echo "SKIP: phase7_update not built (run ./scripts/build_bf.sh)"
+      echo "SKIP: sqlite_update not built (run ./scripts/build_bf.sh)"
     fi
     return 0
   fi
@@ -221,10 +263,10 @@ run_update_test() {
   mkfifo "$RES"
   exec 3<>"$RES"
   echo "Running update..."
-  local update_out="/tmp/phase7_out_$$"
+  local update_out="/tmp/sqlite_update_out_$$"
   timeout 120 "$exe" < /dev/null 2>/dev/null > "$update_out"
   if [ ! -s "$update_out" ] || [ "$(wc -c < "$update_out")" -lt 8000 ]; then
-    echo "FAIL: phase7 produced no or insufficient output"
+    echo "FAIL: sqlite_update produced no or insufficient output"
     rm -f "$update_out" "$RES" "$db_copy"
     exec 3>&-
     exit 1
@@ -257,18 +299,20 @@ run_update_test() {
 }
 
 run_delete_test() {
-  echo "=== Phase 8: delete ==="
-  local exe="$PROJECT_DIR/phase8_delete"
-  if command -v "$BF2C" >/dev/null 2>&1 && [ -f "$PROJECT_DIR/scripts/gen_delete_bf.py" ]; then
-    echo "Building phase8_delete..."
-    python3 "$PROJECT_DIR/scripts/gen_delete_bf.py" > "$PROJECT_DIR/bf/phase8_delete.bf" 2>/dev/null || true
-    BF2C="$BF2C" GCC="${GCC:-gcc}" "$PROJECT_DIR/scripts/build_bf.sh" "$PROJECT_DIR/bf/phase8_delete.bf" 2>/dev/null || true
-  fi
+  echo "=== sqlite_delete ==="
+  local exe="$PROJECT_DIR/sqlite_delete"
+  build_generated_phase \
+    sqlite_delete \
+    "$PROJECT_DIR/scripts/gen_delete_bf.py" \
+    "$PROJECT_DIR/bf/sqlite_delete.bf" \
+    "$exe" \
+    "${GCC:-gcc}" \
+    "$FIXTURES/tiny.db"
   if [ ! -x "$exe" ]; then
     if ! command -v "$BF2C" >/dev/null 2>&1; then
-      echo "SKIP: phase8_delete not built (bf2c not found; set BF2C or run ./scripts/build_bf.sh when available)"
+      echo "SKIP: sqlite_delete not built (bf2c not found; set BF2C or run ./scripts/build_bf.sh when available)"
     else
-      echo "SKIP: phase8_delete not built (run ./scripts/build_bf.sh)"
+      echo "SKIP: sqlite_delete not built (run ./scripts/build_bf.sh)"
     fi
     return 0
   fi
@@ -283,7 +327,7 @@ run_delete_test() {
   mkfifo "$RES"
   exec 3<>"$RES"
   echo "Running delete..."
-  local delete_out="/tmp/phase8_out_$$"
+  local delete_out="/tmp/sqlite_delete_out_$$"
   timeout 120 "$exe" < /dev/null 2>/dev/null > "$delete_out"
   [ -s "$delete_out" ] && REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$delete_out"
   rm -f "$delete_out"
@@ -313,18 +357,20 @@ run_delete_test() {
 }
 
 run_insert_test() {
-  echo "=== Phase 6: insert ==="
-  local exe="$PROJECT_DIR/phase6_insert"
-  if command -v "$BF2C" >/dev/null 2>&1 && [ -f "$PROJECT_DIR/scripts/gen_insert_bf.py" ]; then
-    echo "Building phase6_insert..."
-    python3 "$PROJECT_DIR/scripts/gen_insert_bf.py" > "$PROJECT_DIR/bf/phase6_insert.bf" 2>/dev/null || true
-    BF2C="$BF2C" GCC="${GCC:-gcc}" "$PROJECT_DIR/scripts/build_bf.sh" "$PROJECT_DIR/bf/phase6_insert.bf" 2>/dev/null || true
-  fi
+  echo "=== sqlite_insert ==="
+  local exe="$PROJECT_DIR/sqlite_insert"
+  build_generated_phase \
+    sqlite_insert \
+    "$PROJECT_DIR/scripts/gen_insert_bf.py" \
+    "$PROJECT_DIR/bf/sqlite_insert.bf" \
+    "$exe" \
+    "${GCC:-gcc}" \
+    "$FIXTURES/tiny.db"
   if [ ! -x "$exe" ]; then
     if ! command -v "$BF2C" >/dev/null 2>&1; then
-      echo "SKIP: phase6_insert not built (bf2c not found; set BF2C or run ./scripts/build_bf.sh when available)"
+      echo "SKIP: sqlite_insert not built (bf2c not found; set BF2C or run ./scripts/build_bf.sh when available)"
     else
-      echo "SKIP: phase6_insert not built (run ./scripts/build_bf.sh)"
+      echo "SKIP: sqlite_insert not built (run ./scripts/build_bf.sh)"
     fi
     return 0
   fi
@@ -339,7 +385,7 @@ run_insert_test() {
   mkfifo "$RES"
   exec 3<>"$RES"
   echo "Running insert..."
-  local insert_out="/tmp/phase6_out_$$"
+  local insert_out="/tmp/sqlite_insert_out_$$"
   timeout 120 "$exe" < /dev/null 2>/dev/null > "$insert_out"
   [ -s "$insert_out" ] && REQ=- RES="$RES" "$PROJECT_DIR/scripts/pager.sh" "$db_copy" < "$insert_out"
   rm -f "$insert_out"
@@ -411,12 +457,12 @@ run_all_tests() {
     run_shell_test pager_page
     run_table_scan_test
     run_select_projection_test \
-      phase9_select_users_name \
+      sqlite_select_users_name \
       "users name" \
       "SELECT name FROM users ORDER BY id" \
       "$SCRIPT_DIR/expected_select_users_name.txt"
     run_select_projection_test \
-      phase9_select_users_name_sex \
+      sqlite_select_users_name_sex \
       "users name sex" \
       "SELECT name||'|'||sex FROM users ORDER BY id" \
       "$SCRIPT_DIR/expected_select_users_name_sex.txt"
@@ -442,14 +488,14 @@ if [ $# -gt 0 ]; then
       table_scan) run_table_scan_test ;;
       select_name)
         run_select_projection_test \
-          phase9_select_users_name \
+          sqlite_select_users_name \
           "users name" \
           "SELECT name FROM users ORDER BY id" \
           "$SCRIPT_DIR/expected_select_users_name.txt"
         ;;
       select_name_sex)
         run_select_projection_test \
-          phase9_select_users_name_sex \
+          sqlite_select_users_name_sex \
           "users name sex" \
           "SELECT name||'|'||sex FROM users ORDER BY id" \
           "$SCRIPT_DIR/expected_select_users_name_sex.txt"

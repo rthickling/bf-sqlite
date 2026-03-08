@@ -22,7 +22,7 @@ RUN git clone --depth 1 https://github.com/yoshi389111/brainfuck-compiler-c.git 
     && cd brainfuck-compiler-c && make && cp bf2c /usr/local/bin/ \
     && cd / && rm -rf /tmp/brainfuck-compiler-c
 
-# Phases 4-8 need clang -O0 (gcc segfaults on huge generated C)
+# Phases 4-9 need clang -O0 (gcc can segfault on huge generated C)
 ENV GCC="clang -O0"
 ENV BF2C=bf2c
 

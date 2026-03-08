@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Phase 5 BF program for a full demo-table scan."""
+"""Generate BF for the sqlite_table_scan demo program."""
 
 from pathlib import Path
 

@@ -23,10 +23,12 @@ run-bf-db examples/01_hello_header.bf tests/fixtures/tiny.db
 Useful commands:
 
 ```bash
-run-bf-db ./phase5_table_scan tests/fixtures/tiny.db
+run-bf-db ./sqlite_table_scan tests/fixtures/tiny.db
+run-bf-db ./sqlite_select_users_name_sex tests/fixtures/tiny.db
 
 run-tests
 shell
 ```
 
-`scripts/run_bf_db.sh` will build missing phase binaries and create the demo database when needed.
+`run-bf-db` will build missing demo binaries and create the demo database when needed.
+`run-tests` reuses existing generated demo executables and only rebuilds stale ones.

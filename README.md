@@ -1,6 +1,6 @@
 # BF-SQLite
 
-**SQLite file-format access in BrainFuck.** The shell side only moves bytes. The BrainFuck side does the interesting work: header parsing, page reads, schema walking, table scans, and small controlled writes.
+**SQLite file-format access in BrainFuck.** The shell side only moves bytes. The BrainFuck side does the interesting work: header parsing, page reads, schema walking, table scans, limited column projection, and small controlled writes.
 
 ## Why I Built This
 
@@ -47,13 +47,13 @@ run-bf-db examples/01_hello_header.bf tests/fixtures/tiny.db
 Scan the demo table:
 
 ```bash
-run-bf-db ./phase5_table_scan tests/fixtures/tiny.db
+run-bf-db ./sqlite_table_scan tests/fixtures/tiny.db
 ```
 
 Project selected columns from the demo table:
 
 ```bash
-run-bf-db ./phase9_select_users_name_sex tests/fixtures/tiny.db
+run-bf-db ./sqlite_select_users_name_sex tests/fixtures/tiny.db
 ```
 
 Run the proof suite:
@@ -62,7 +62,8 @@ Run the proof suite:
 run-tests
 ```
 
-`run_bf_db.sh` will build missing phase binaries automatically and create `tests/fixtures/tiny.db` when `sqlite3` is available.
+`run-bf-db` will build missing demo binaries automatically and create `tests/fixtures/tiny.db` when `sqlite3` is available.
+`run-tests` will also reuse existing generated demo executables and only rebuild stale ones.
 
 ## How it works
 
@@ -88,13 +89,14 @@ The protocol is intentionally small:
 
 - `scripts/run_bf_db.sh` runs any `.bf` file or built phase executable against a database
 - `examples/01_hello_header.bf` is the minimal runnable demo
-- `phase9_select_users_name_sex` is the simplest `SELECT name,sex FROM users;` equivalent
+- `sqlite_select_users_name_sex` is the simplest `SELECT name,sex FROM users;` equivalent
+- `tests/run_tests.sh` is the proof runner behind `run-tests`
 - `docs/USAGE.md` explains the pager protocol and BF integration model
 - `tests/TESTS.md` summarizes what is verified
 
 ## Repo guide
 
-- `bf/` contains the phase programs and BF helper libraries
+- `bf/` contains the named SQLite demo programs and BF helper libraries
 - `examples/` contains the curated demo plus reference sketches
 - `scripts/` contains the pager, build, and run helpers
 - `tools/` contains the Dockerized toolchain

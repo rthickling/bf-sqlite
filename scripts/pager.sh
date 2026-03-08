@@ -33,16 +33,36 @@ elif [ ! -p "$RES" ]; then
 fi
 
 cleanup() {
-  [ -z "$USE_STDOUT" ] && rm -f "$RES"
-  [ -z "$USE_STDIN" ] && rm -f "$REQ"
+  if [ -z "$USE_STDOUT" ]; then
+    rm -f "$RES"
+  fi
+  if [ -z "$USE_STDIN" ]; then
+    rm -f "$REQ"
+  fi
 }
 trap cleanup EXIT
 
-read_line() { if [ -n "$USE_STDIN" ]; then IFS= read -r line <&4; else IFS= read -r line < "$REQ"; fi; }
-read_chunk() { if [ -n "$USE_STDIN" ]; then IFS= read -r chunk <&4; else IFS= read -r chunk < "$REQ"; fi; }
+read_line() {
+  if [ -n "$USE_STDIN" ]; then
+    IFS= read -r line <&4 || return $?
+  else
+    IFS= read -r line < "$REQ" || return $?
+  fi
+}
+read_chunk() {
+  if [ -n "$USE_STDIN" ]; then
+    IFS= read -r chunk <&4 || return $?
+  else
+    IFS= read -r chunk < "$REQ" || return $?
+  fi
+}
 emit_response() { if [ -n "$USE_STDOUT" ]; then cat; else cat > "$RES"; fi; }
 
-while read_line; [ -n "${line:-}" ]; do
+while true; do
+  if ! read_line; then
+    break
+  fi
+  [ -n "${line:-}" ] || break
   set -- $line
   cmd="${1:-}"
 
@@ -77,3 +97,5 @@ while read_line; [ -n "${line:-}" ]; do
       ;;
   esac
 done
+
+exit 0
