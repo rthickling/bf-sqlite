@@ -10,22 +10,22 @@ The Docker image builds the whole toolchain from scratch:
 Build it once:
 
 ```bash
-./scripts/docker_build_image.sh
+./bin/build-image
 ```
 
 Then use the wrapper scripts from the host:
 
 ```bash
-./scripts/docker_run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
+./bin/run-bf-db examples/01_hello_header.bf tests/fixtures/tiny.db
 ```
 
 Useful commands:
 
 ```bash
-./scripts/docker_run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
+./bin/run-bf-db ./phase5_table_scan tests/fixtures/tiny.db
 
-./scripts/docker_run_tests.sh
-./scripts/docker_shell.sh
+./bin/run-tests
+./bin/shell
 ```
 
 `scripts/run_bf_db.sh` will build missing phase binaries and create the demo database when needed.

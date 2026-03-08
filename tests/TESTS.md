@@ -17,22 +17,22 @@ This test suite is meant to prove the interesting claims quickly.
 ## Run everything
 
 ```bash
-./tests/run_tests.sh
+./bin/run-tests
 ```
 
 Docker:
 
 ```bash
-docker run --rm -v "$(pwd)":/work bf-sqlite ./tests/run_tests.sh
+./bin/run-tests
 ```
 
 Selected checks:
 
 ```bash
-./tests/run_tests.sh table_scan
-./tests/run_tests.sh insert
-./tests/run_tests.sh update
-./tests/run_tests.sh delete
+./bin/run-tests table_scan
+./bin/run-tests insert
+./bin/run-tests update
+./bin/run-tests delete
 ```
 
 ## Expectations
@@ -48,6 +48,7 @@ Selected checks:
 
 ## Notes
 
+- `./bin/run-tests` is the Docker-first path. The local/manual runner is `./tests/run_tests.sh`.
 - `tests/run_tests.sh` will create `tests/fixtures/tiny.db` when `sqlite3` is available.
 - Phases 4–8 compile more reliably with `GCC="clang -O0"`.
 - `table_scan` is the slowest test; generated phase 5 BF is large.

@@ -1,9 +1,8 @@
 # BF-SQLite toolchain: builds bf2c and compilers from scratch.
 # For BF-only developers: you edit .bf; the container provides everything else.
 #
-# Build:  docker build -f tools/Dockerfile -t bf-sqlite .
-# Run:    docker run -it --rm -v $(pwd):/work bf-sqlite
-#         # inside: ./scripts/run_bf_db.sh my.bf tests/fixtures/tiny.db
+# Build from the project root with `./bin/build-image`.
+# Then run commands with `./bin/run-bf-db`, `./bin/run-tests`, or `./bin/shell`.
 
 FROM debian:bookworm-slim
 

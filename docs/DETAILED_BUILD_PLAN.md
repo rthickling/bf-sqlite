@@ -2,11 +2,11 @@
 
 ## Overview
 
-This document provides a comprehensive, implementable plan for building a BrainFuck-based SQLite file reader/writer using only pipes, FIFOs, and core Linux utilities. It integrates the architecture, build plan, and ChatGPT component suggestions into a single actionable roadmap.
+This document provides a comprehensive, implementable plan for building a BrainFuck-based SQLite file reader/writer using only pipes, FIFOs, and core Linux utilities. It combines the architecture and build notes into a single implementation roadmap.
 
 ---
 
-## Components (ChatGPT Checklist)
+## Components
 
 | Component | Implemented in | Purpose |
 |-----------|----------------|---------|
@@ -45,7 +45,7 @@ This document provides a comprehensive, implementable plan for building a BrainF
 - Shell: `echo "H" | pager.sh db` returns 200 hex chars + newline
 - BF: requests H, reads 200 hex chars, decodes to 100 bytes
 
-**Status**: Phase 1–3 done. Phase 4: `scripts/gen_phase4_bf.py` parses first sqlite_schema cell, extracts rootpage. Decodes cell at offset 4034, parses record (type, name, tbl_name, rootpage, sql), outputs rootpage. Build with `./scripts/build_bf.sh`, run with `INSPECTOR=./phase4_schema_walk ./scripts/run_inspector.sh db`.
+**Status**: Phase 1–3 done. Phase 4: `scripts/gen_phase4_bf.py` parses the first `sqlite_schema` cell, extracts `rootpage`, decodes the record at offset 4034, and outputs the result. Build with `./scripts/build_bf.sh`, run with `INSPECTOR=./phase4_schema_walk ./scripts/run_inspector.sh db`.
 
 ---
 
@@ -403,3 +403,4 @@ Notes:
 - `run_bf_db.sh` uses `python3` locally to route pager commands and responses.
 - `run_bf_db.sh` will create `tests/fixtures/tiny.db` from `tests/fixtures/tiny.sql.txt` when `sqlite3` is available.
 - For phases 4–8, `GCC="clang -O0"` is often more reliable than `gcc`.
+- If you want the cleaner Docker-first commands, use `./bin/build-image`, `./bin/run-bf-db`, and `./bin/run-tests` from the project root instead.

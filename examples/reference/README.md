@@ -8,4 +8,4 @@ Start with:
 
 - `examples/01_hello_header.bf`
 - `./phase5_table_scan`
-- `./tests/run_tests.sh`
+- `./bin/run-tests`

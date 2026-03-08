@@ -28,25 +28,25 @@ In roughly a day of part-time work, this repo went from idea to a working demo t
 Build the toolchain from scratch:
 
 ```bash
-./scripts/docker_build_image.sh
+./bin/build-image
 ```
 
 Run the smallest demo:
 
 ```bash
-./scripts/docker_run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
+./bin/run-bf-db examples/01_hello_header.bf tests/fixtures/tiny.db
 ```
 
 Scan the demo table:
 
 ```bash
-./scripts/docker_run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
+./bin/run-bf-db ./phase5_table_scan tests/fixtures/tiny.db
 ```
 
 Run the proof suite:
 
 ```bash
-./scripts/docker_run_tests.sh
+./bin/run-tests
 ```
 
 `run_bf_db.sh` will build missing phase binaries automatically and create `tests/fixtures/tiny.db` when `sqlite3` is available.
@@ -86,13 +86,19 @@ The protocol is intentionally small:
 - `tools/` contains the Dockerized toolchain
 - `docs/archive/` contains older planning and maintenance notes
 
-The Docker wrappers are designed to feel like a local toolchain:
+The top-level `bin/` commands are designed to feel like a local toolchain:
 
-- `./scripts/docker_build_image.sh`
-- `./scripts/docker_build_bf.sh`
-- `./scripts/docker_run_bf_db.sh`
-- `./scripts/docker_run_tests.sh`
-- `./scripts/docker_shell.sh`
+- `./bin/build-image`
+- `./bin/build-bf`
+- `./bin/run-bf-db`
+- `./bin/run-tests`
+- `./bin/shell`
+
+If you want to avoid the leading `./`, you can do:
+
+```bash
+export PATH="$PWD/bin:$PATH"
+```
 
 For the non-Docker/manual toolchain path, see the appendix in `docs/DETAILED_BUILD_PLAN.md`.
 
