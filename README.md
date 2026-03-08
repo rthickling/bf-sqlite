@@ -8,7 +8,7 @@ The shell side only moves bytes. The BrainFuck side does the interesting work: h
 
 This project is an intentionally absurd demonstration.
 
-The point is not that BrainFuck is a sensible language for database work. The point is that a piece of software which would normally feel intractable can now be assembled surprisingly quickly with AI assistance.
+The point is not that BrainFuck is a sensible language for database work. The point is that a piece of software which would normally feel intractable can now be assembled surprisingly quickly with AI assistance.  It's partly provoked by Matt Shumer's article [Somthing Big is Happening](https://shumer.dev/something-big-is-happening).
 
 In roughly a day of part-time work, this repo went from idea to a working demo that can:
 
