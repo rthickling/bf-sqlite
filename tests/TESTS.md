@@ -16,23 +16,29 @@ This test suite is meant to prove the interesting claims quickly.
 
 ## Run everything
 
+Add `bin/` to your `PATH` first:
+
 ```bash
-./bin/run-tests
+export PATH="$PWD/bin:$PATH"
+```
+
+```bash
+run-tests
 ```
 
 Docker:
 
 ```bash
-./bin/run-tests
+run-tests
 ```
 
 Selected checks:
 
 ```bash
-./bin/run-tests table_scan
-./bin/run-tests insert
-./bin/run-tests update
-./bin/run-tests delete
+run-tests table_scan
+run-tests insert
+run-tests update
+run-tests delete
 ```
 
 ## Expectations
@@ -48,7 +54,7 @@ Selected checks:
 
 ## Notes
 
-- `./bin/run-tests` is the Docker-first path. The local/manual runner is `./tests/run_tests.sh`.
+- `run-tests` is the Docker-first path once `bin/` is on your `PATH`. The local/manual runner is `./tests/run_tests.sh`.
 - `tests/run_tests.sh` will create `tests/fixtures/tiny.db` when `sqlite3` is available.
 - Phases 4–8 compile more reliably with `GCC="clang -O0"`.
 - `table_scan` is the slowest test; generated phase 5 BF is large.

@@ -403,4 +403,4 @@ Notes:
 - `run_bf_db.sh` uses `python3` locally to route pager commands and responses.
 - `run_bf_db.sh` will create `tests/fixtures/tiny.db` from `tests/fixtures/tiny.sql.txt` when `sqlite3` is available.
 - For phases 4–8, `GCC="clang -O0"` is often more reliable than `gcc`.
-- If you want the cleaner Docker-first commands, use `./bin/build-image`, `./bin/run-bf-db`, and `./bin/run-tests` from the project root instead.
+- If you want the cleaner Docker-first commands, add `bin/` to your `PATH` from the project root and use `build-image`, `run-bf-db`, and `run-tests` instead.

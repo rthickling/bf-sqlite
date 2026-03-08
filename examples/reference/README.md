@@ -6,6 +6,7 @@ They are useful if you want to study the pager protocol, but they are not the ma
 
 Start with:
 
+- `export PATH="$PWD/bin:$PATH"`
 - `examples/01_hello_header.bf`
 - `./phase5_table_scan`
-- `./bin/run-tests`
+- `run-tests`

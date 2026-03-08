@@ -1,8 +1,8 @@
 # BF-SQLite toolchain: builds bf2c and compilers from scratch.
 # For BF-only developers: you edit .bf; the container provides everything else.
 #
-# Build from the project root with `./bin/build-image`.
-# Then run commands with `./bin/run-bf-db`, `./bin/run-tests`, or `./bin/shell`.
+# Add `bin/` to PATH from the project root, then use `build-image`.
+# After that, run `run-bf-db`, `run-tests`, or `shell`.
 
 FROM debian:bookworm-slim
 

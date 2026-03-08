@@ -25,28 +25,34 @@ In roughly a day of part-time work, this repo went from idea to a working demo t
 
 ## Quick start
 
+Add `bin/` to your shell `PATH` for this checkout:
+
+```bash
+export PATH="$PWD/bin:$PATH"
+```
+
 Build the toolchain from scratch:
 
 ```bash
-./bin/build-image
+build-image
 ```
 
 Run the smallest demo:
 
 ```bash
-./bin/run-bf-db examples/01_hello_header.bf tests/fixtures/tiny.db
+run-bf-db examples/01_hello_header.bf tests/fixtures/tiny.db
 ```
 
 Scan the demo table:
 
 ```bash
-./bin/run-bf-db ./phase5_table_scan tests/fixtures/tiny.db
+run-bf-db ./phase5_table_scan tests/fixtures/tiny.db
 ```
 
 Run the proof suite:
 
 ```bash
-./bin/run-tests
+run-tests
 ```
 
 `run_bf_db.sh` will build missing phase binaries automatically and create `tests/fixtures/tiny.db` when `sqlite3` is available.
@@ -86,19 +92,13 @@ The protocol is intentionally small:
 - `tools/` contains the Dockerized toolchain
 - `docs/archive/` contains older planning and maintenance notes
 
-The top-level `bin/` commands are designed to feel like a local toolchain:
+With `bin/` on your `PATH`, the top-level commands feel like a local toolchain:
 
-- `./bin/build-image`
-- `./bin/build-bf`
-- `./bin/run-bf-db`
-- `./bin/run-tests`
-- `./bin/shell`
-
-If you want to avoid the leading `./`, you can do:
-
-```bash
-export PATH="$PWD/bin:$PATH"
-```
+- `build-image`
+- `build-bf`
+- `run-bf-db`
+- `run-tests`
+- `shell`
 
 For the non-Docker/manual toolchain path, see the appendix in `docs/DETAILED_BUILD_PLAN.md`.
 

@@ -7,13 +7,6 @@ This is the integration guide: what your BrainFuck program has to say, what it g
 Docker-first:
 
 ```bash
-./bin/build-image
-./bin/run-bf-db my_program.bf tests/fixtures/tiny.db
-```
-
-Optional:
-
-```bash
 export PATH="$PWD/bin:$PATH"
 build-image
 run-bf-db my_program.bf tests/fixtures/tiny.db

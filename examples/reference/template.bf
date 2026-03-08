@@ -3,7 +3,8 @@
 # Protocol: write commands to stdout, read hex responses from stdin.
 # Commands: H (header), R <page_size> <page_no> (read page), W <page_size> <page_no> (write page)
 #
-# Run: ./bin/run-bf-db examples/reference/template.bf path/to/database.db
+# Run after `export PATH="$PWD/bin:$PATH"`:
+#      run-bf-db examples/reference/template.bf path/to/database.db
 #
 # This example: sends H, reads 200 hex chars, prints OK
 #
