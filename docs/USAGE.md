@@ -7,9 +7,8 @@ This is the integration guide: what your BrainFuck program has to say, what it g
 Docker-first:
 
 ```bash
-docker build -f tools/Dockerfile -t bf-sqlite .
-docker run --rm -v "$(pwd)":/work bf-sqlite \
-  ./scripts/run_bf_db.sh my_program.bf tests/fixtures/tiny.db
+./scripts/docker_build_image.sh
+./scripts/docker_run_bf_db.sh my_program.bf tests/fixtures/tiny.db
 ```
 
 Local toolchain:
@@ -127,3 +126,4 @@ The current generators and write demos target this schema.
 - [examples/README.md](../examples/README.md)
 - [tests/TESTS.md](../tests/TESTS.md)
 - [PHASE2_SPEC.md](PHASE2_SPEC.md)
+- [DETAILED_BUILD_PLAN.md](DETAILED_BUILD_PLAN.md)

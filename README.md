@@ -15,27 +15,25 @@
 Build the toolchain from scratch:
 
 ```bash
-docker build -f tools/Dockerfile -t bf-sqlite .
+./scripts/docker_build_image.sh
 ```
 
 Run the smallest demo:
 
 ```bash
-docker run --rm -v "$(pwd)":/work bf-sqlite \
-  ./scripts/run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
+./scripts/docker_run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
 ```
 
 Scan the demo table:
 
 ```bash
-docker run --rm -v "$(pwd)":/work bf-sqlite \
-  ./scripts/run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
+./scripts/docker_run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
 ```
 
 Run the proof suite:
 
 ```bash
-docker run --rm -v "$(pwd)":/work bf-sqlite ./tests/run_tests.sh
+./scripts/docker_run_tests.sh
 ```
 
 `run_bf_db.sh` will build missing phase binaries automatically and create `tests/fixtures/tiny.db` when `sqlite3` is available.
@@ -75,18 +73,15 @@ The protocol is intentionally small:
 - `tools/` contains the Dockerized toolchain
 - `docs/archive/` contains older planning and maintenance notes
 
-## Without Docker
+The Docker wrappers are designed to feel like a local toolchain:
 
-Local builds work too:
+- `./scripts/docker_build_image.sh`
+- `./scripts/docker_build_bf.sh`
+- `./scripts/docker_run_bf_db.sh`
+- `./scripts/docker_run_tests.sh`
+- `./scripts/docker_shell.sh`
 
-```bash
-./scripts/build_bf.sh
-./scripts/run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
-```
-
-Local use of `run_bf_db.sh` now expects `python3` as well as the compiler toolchain.
-
-Use `GCC="clang -O0"` for phases 4–8 if your local `gcc` struggles with the large generated C.
+For the non-Docker/manual toolchain path, see the appendix in `docs/DETAILED_BUILD_PLAN.md`.
 
 ## Scope
 

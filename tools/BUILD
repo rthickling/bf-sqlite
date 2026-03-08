@@ -10,23 +10,22 @@ The Docker image builds the whole toolchain from scratch:
 Build it once:
 
 ```bash
-docker build -f tools/Dockerfile -t bf-sqlite .
+./scripts/docker_build_image.sh
 ```
 
-Then use the mounted repo as your working tree:
+Then use the wrapper scripts from the host:
 
 ```bash
-docker run --rm -v "$(pwd)":/work bf-sqlite \
-  ./scripts/run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
+./scripts/docker_run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
 ```
 
 Useful commands:
 
 ```bash
-docker run --rm -v "$(pwd)":/work bf-sqlite \
-  ./scripts/run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
+./scripts/docker_run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
 
-docker run --rm -v "$(pwd)":/work bf-sqlite ./tests/run_tests.sh
+./scripts/docker_run_tests.sh
+./scripts/docker_shell.sh
 ```
 
 `scripts/run_bf_db.sh` will build missing phase binaries and create the demo database when needed.

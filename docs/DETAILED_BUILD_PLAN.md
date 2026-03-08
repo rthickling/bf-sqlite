@@ -369,3 +369,37 @@ bf-sqlite/
 **Accurate**:
 - "SQLite file-format reader/writer core in BrainFuck"
 - "BrainFuck SQLite page parser via shell pager"
+
+---
+
+## Appendix: Without Docker
+
+If you want to use the project with a local toolchain instead of the Docker wrappers, the rough workflow is:
+
+1. Install:
+   - `bf2c`
+   - `python3`
+   - a C compiler (`gcc` or `clang`)
+   - `sqlite3` if you want the fixture DB created automatically
+
+2. Build the phase programs:
+   ```bash
+   ./scripts/build_bf.sh
+   ```
+
+3. Run a BF program against the demo database:
+   ```bash
+   ./scripts/run_bf_db.sh examples/01_hello_header.bf tests/fixtures/tiny.db
+   ./scripts/run_bf_db.sh ./phase5_table_scan tests/fixtures/tiny.db
+   ```
+
+4. Run the tests:
+   ```bash
+   ./tests/run_tests.sh
+   ```
+
+Notes:
+
+- `run_bf_db.sh` uses `python3` locally to route pager commands and responses.
+- `run_bf_db.sh` will create `tests/fixtures/tiny.db` from `tests/fixtures/tiny.sql.txt` when `sqlite3` is available.
+- For phases 4–8, `GCC="clang -O0"` is often more reliable than `gcc`.
