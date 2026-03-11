@@ -1,3 +1,4 @@
+![](/assets/images/emoji-face-exploding.webp)
 # BF-SQLite
 
 **SQLite file-format access in BrainFuck** : an experiment in interacting with SQLite databases from Brainfuck using only standard Linux primitives.
